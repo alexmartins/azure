@@ -1,0 +1,46 @@
+steps:
+
+  - id: "criando imagem go"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["build","--build-arg","version=1.24.0","-t","gcr.io/$PROJECT_ID/codeeducation-desafiok8s-hba:latest","."]
+  
+  - id: "executando teste"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["run","--rm","--entrypoint",go,"gcr.io/$PROJECT_ID/codeeducation-desafiok8s-hba","test"]
+
+  - id: "building image from Dockerfile"
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/app-ci:$SHORT_SHA','-f', 'Dockerfile', '.']
+
+  - id: "pushing image"
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['push','gcr.io/$PROJECT_ID/app-ci:$SHORT_SHA']
+
+  - id: "adjusting deployment file-k8s"
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: '/bin/sh'
+    args:
+      - '-c'
+      - |
+        sed 's#img-app-deployment#gcr.io/$PROJECT_ID/app-ci:$SHORT_SHA#g' k8s/app/deployment.yaml > k8s/app/deployment-new.yaml;
+        cat k8s/app/deployment-new.yaml;
+
+  - id: "deployng k8s"
+    name: 'gcr.io/cloud-builders/kubectl'
+    args: 
+      - 'apply'
+      - '-f'
+      - 'k8s/app/deployment-new.yaml'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-app-ex-final'
+
+  - id: "service k8s"
+    name: 'gcr.io/cloud-builders/kubectl'
+    args: 
+      - 'apply'
+      - '-f'
+      - 'k8s/app/service.yaml'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-app-ex-final'

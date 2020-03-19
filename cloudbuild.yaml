@@ -1,0 +1,9 @@
+steps:
+
+  - id: "criando imagem go"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["build","--build-arg","version=1.24.0","-t","gcr.io/$PROJECT_ID/codeeducation-desafiok8s-hba:latest","."]
+  
+  - id: "executando teste"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["run","--rm","--entrypoint",go,"gcr.io/$PROJECT_ID/codeeducation-desafiok8s-hba","test"]
