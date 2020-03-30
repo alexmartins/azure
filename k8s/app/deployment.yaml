@@ -18,13 +18,13 @@ spec:
     spec:
       containers:
       - name: app
-        image: img-app-deployment
+        image: alexmartins/k8s-final:latest
         ports:
         - containerPort: 8000
 
         resources:
           requests:
-            #memory: "64Mi"
+            memory: "64Mi"
             cpu: "50m"
           limits:
             cpu: "100m"
